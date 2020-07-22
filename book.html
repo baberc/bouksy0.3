@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="description" content="store our books">
+	<meta name="author" content="sana">
+	<meta name="keywords" content="keywords for search engines"> 
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>uri books store</title>
+	<style type="text/css">
+	  table{ margin-left: 5%; width: 60%; }
+	  th,td {
+  		border-bottom: 1px solid #ddd;
+  		padding-left: 1%;
+  		padding-right: 2%;
+  		height: 40px;
+  		text-align: left;
+  		overflow: auto;
+		}
+		th{ background-color: #e5e0e0;}
+		tr{ background-color: #fffcfc;}
+	    tr:hover { background-color: #f5f5f5;}
+	    #keyword{ margin: 0px; width: 100%;overflow:auto;}
+      input:focus {outline:none}
+	    .bouton{margin-left: 85%; background-color: #d30b5c;width: 90px;color: white;	border-radius: 5px; height: 30px; font-weight: bold;}
+	    .bouton:hover {background-color: #e01d6b}
+	</style>
+</head>
+<body>
+	<h2 align = "center"> Books store </h2>
+      <div id='searchArea' >
+           <input type="text" name="search" id='keyword' placeholder="type your seach keywords" autocomplete="off"/>
+      </div>
+	<!une grille pour enregistrer les livre-->
+       <div id="ma_grille"></div>
+</body>
+</html>
+<script type="text/javascript">
+
+(function  (){ //une IIFE pour éviter les variables globales
+    var madiv   = document.getElementById('ma_grille');
+   
+    var keyword = document.getElementById('keyword');
+
+    var withSides = true;
+    var withInput = true;
+    
+
+    buildDynamicGrid_DOM(['nom du livre',"Date d'achat",'owner','location','lu par'],madiv,withInput,withSides) ;
+    loadFile('/books/bookslist.txt',withSides);
+    keyword.addEventListener('keyup',loadSearchedItem);
+
+//===buildDynamicGrid_DOM : crée le cade de la grille thead,tbody et tfoot withSides and without ============//
+  function buildDynamicGrid_DOM(columnsTab,container,withInput,withSides){
+           var myform  = document.createElement('form');
+                         myform.setAttribute('action','/books/add');
+                         myform.setAttribute('method','post');
+                         container.appendChild(myform);
+           var mybutton = document.createElement('input');
+                         mybutton.setAttribute('type','submit');
+                         mybutton.setAttribute('name','add');
+                         mybutton.setAttribute('value','ADD');
+                         mybutton.setAttribute('class','bouton');
+           var matable = document.createElement('table');
+           var thead = document.createElement('thead');
+           var tbody = document.createElement('tbody');
+           var tfoot = document.createElement('tfoot');
+
+               thead.appendChild(document.createElement('tr'));
+               tfoot.appendChild(document.createElement('tr'));
+
+         for(let i=0;i<columnsTab.length;i++){
+                   var th = document.createElement('th') ;
+                       th.appendChild(document.createTextNode(columnsTab[i]));
+                       thead.firstChild.appendChild(th);
+                       if(withInput){
+                          var td = document.createElement(('td'));
+                          var myinput = document.createElement('input');
+                              if(columnsTab[i].toLowerCase().indexOf('date')>-1){
+                                   myinput.setAttribute("type", "date");
+                                   myinput.setAttribute("name", "dateAchat");
+                              }
+                              else{
+                                   myinput.setAttribute("type", "text");
+                                   myinput.setAttribute("placeholder", columnsTab[i]);
+                                   myinput.setAttribute("name", columnsTab[i].split(" ")[0]);
+                              }
+                          td.appendChild(myinput);
+                          tfoot.firstChild.appendChild(td);
+                       }
+               }
+                matable.appendChild(thead);
+                matable.appendChild(tbody);
+                matable.appendChild(tfoot);
+                myform.appendChild(matable); 
+                myform.appendChild(mybutton);           
+                container.appendChild(myform);
+                    if(withSides){
+                      var thdelete = document.createElement('th');
+                      thdelete.appendChild(document.createTextNode('X'));
+
+                      var thupdate = document.createElement('th');
+                      thupdate.appendChild(document.createTextNode('update'));
+                      thead.firstChild.appendChild(thdelete);
+                      thead.firstChild.appendChild(thupdate);
+                    }
+  }
+
+//==les fonction de verification des inputs avant l'envoi==//
+    function ValidateMyform(){
+       if(isTag()) event.preventDefault();//si c'est vide ou tag bloque l'envoi
+    }
+
+    function isTag(){
+      var regEx = /^[<][a-zA-Z0-9<>]+[>]$/; //commence par < et termine par >
+      if(regEx.test(this.value)||this.value==""){
+           errorStyle(this,'mansitich smiya ?');
+           return true;
+        }
+      else{
+           this.style.border = '';
+           if(this.nextSibling) this.parentNode.removeChild(this.parentNode.lastChild);
+             return false;
+        }
+      }
+
+    function errorStyle(myinput,msg){  
+        var span1 = document.createElement('span');
+        span1.style.font = 'italic normal 10px arial,serif';
+        span1.style.color ="#e38748";
+        myinput.style.border = '1px solid #fcac76';
+        
+        span1.appendChild(document.createTextNode(msg));
+        myinput.nextSibling ? myinput.parentNode.replaceChild(span1,myinput.parentNode.lastChild) : myinput.parentNode.appendChild(span1);
+    }
+//==les fonctions du  chargement du fichier qui contient la liste des item==// 
+    function loadFile(fichier,withSides){
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET',fichier);
+        xhr.addEventListener('readystatechange',function(){
+          if(xhr.readyState===XMLHttpRequest.DONE && xhr.status===200){
+                       contentLoad(xhr.responseText,madiv.firstChild.firstChild.childNodes[1],withSides);
+                          }
+                        });
+        xhr.send(null);
+       }
+
+    function contentLoad(data,container,withSides){
+          var lignes = data.split('\n'),
+              colonnes = [];
+            for(var i=0;i<lignes.length;i++){
+              if(lignes[i]!==""){
+                 colonnes[i] = lignes[i].split(",");
+                 var tr = document.createElement('tr');
+                    for(var j=1;j<colonnes[i].length;j++){
+                        if(colonnes[i][j]!==""){
+                           var td = document.createElement('td');
+                           td.appendChild(document.createTextNode(colonnes[i][j]));
+                           tr.appendChild(td);
+                          }
+                        }
+                      container.appendChild(tr);
+                    if(withSides){
+                      insertDelLink(colonnes[i][0],tr,'del','/books/');
+                      insertDelLink(colonnes[i][0],tr,'update','/books/');
+                       }
+               }
+          }
+      }
+       function insertDelLink(id,row,purpose,url){
+            var col = document.createElement('td');
+            var myLink = document.createElement('a');
+                myLink.setAttribute('href',url+purpose+'?id='+id);
+                myLink.setAttribute('class',purpose);
+                myLink.appendChild(document.createTextNode(purpose));
+
+                col.appendChild(myLink);
+                row.appendChild(col);
+       }
+    
+//==la fonction qui envoi vers l'autocompétion et affiche les élément recherchés==//
+    function loadSearchedItem(){
+         var myTbody = madiv.firstChild.firstChild.childNodes[1];
+         //vider le Tbody 
+         while(myTbody.firstChild){
+         myTbody.removeChild(myTbody.lastChild);
+         }
+        loadFile('/books/search?key='+keyword.value,withSides);
+      }
+
+})();
+</script>

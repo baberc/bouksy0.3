@@ -1,0 +1,10 @@
+2,Vertigo, istihdar,sana,dar,afaf
+6,sss,2020-04-20,afaf,brra,sana
+7,more,2020-04-13,afaf,brra,sana
+12,ljadid,2020-04-21,afaf,brra,sana
+1,more,2020-04-29,afaf,brra,sana
+2,newbi,2020-04-21,afaf,brra,sana
+14,anatani,2020-04-22,afaf,brra,sana
+15,anatani,2020-04-22,afaf,brra,sana
+16,mala,2020-04-21,afaf,brra,sana
+17,d,2020-07-20,nn,AGADIR,ss
